@@ -3,9 +3,11 @@ import Foundation
 class Grok {
     private let apiKey: String
     private let baseURL = "https://api.x.ai/v1/chat/completions"  // 示例 URL
+    private let session: URLSession
     
     init(apiKey: String) {
         self.apiKey = apiKey
+        self.session = NetworkConfig.configuredSession()
     }
     
     func complete(model: String, prompt: String) async throws -> String {
@@ -41,7 +43,8 @@ class Grok {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
-        let (data, httpResponse) = try await URLSession.shared.data(for: request)
+        // 使用配置了代理的 session
+        let (data, httpResponse) = try await session.data(for: request)
         
         // 记录响应状态码和原始数据
         if let httpResponse = httpResponse as? HTTPURLResponse {

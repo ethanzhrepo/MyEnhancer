@@ -6,6 +6,9 @@ struct SettingsView: View {
     @AppStorage("openaiKey") private var openaiKey: String = ""
     @AppStorage("grokKey") private var grokKey: String = ""
     @AppStorage("showOnTop") private var showOnTop: Bool = false
+    @AppStorage("useProxy") private var useProxy: Bool = false
+    @AppStorage("proxyHost") private var proxyHost: String = ""
+    @AppStorage("proxyPort") private var proxyPort: String = ""
     @Environment(\.dismiss) private var dismiss
     
     // 临时存储编辑中的值
@@ -14,6 +17,9 @@ struct SettingsView: View {
     @State private var tempOpenAIKey: String
     @State private var tempGrokKey: String
     @State private var tempShowOnTop: Bool
+    @State private var tempUseProxy: Bool
+    @State private var tempProxyHost: String
+    @State private var tempProxyPort: String
     
     let providers = ["OpenAI", "X"]
     
@@ -28,6 +34,9 @@ struct SettingsView: View {
         _tempOpenAIKey = State(initialValue: UserDefaults.standard.string(forKey: "openaiKey") ?? "")
         _tempGrokKey = State(initialValue: UserDefaults.standard.string(forKey: "grokKey") ?? "")
         _tempShowOnTop = State(initialValue: UserDefaults.standard.bool(forKey: "showOnTop"))
+        _tempUseProxy = State(initialValue: UserDefaults.standard.bool(forKey: "useProxy"))
+        _tempProxyHost = State(initialValue: UserDefaults.standard.string(forKey: "proxyHost") ?? "")
+        _tempProxyPort = State(initialValue: UserDefaults.standard.string(forKey: "proxyPort") ?? "")
     }
     
     // 获取当前选中提供商的 API Key
@@ -46,6 +55,21 @@ struct SettingsView: View {
     
     var body: some View {
         Form {
+            // 代理设置
+            Section {
+                Toggle("Use SOCKS5 Proxy", isOn: $tempUseProxy)
+                
+                if tempUseProxy {
+                    TextField("Host", text: $tempProxyHost)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("Port", text: $tempProxyPort)
+                        .textFieldStyle(.roundedBorder)
+                }
+            } header: {
+                Text("Proxy Settings")
+            }
+            
+            // AI 提供商设置
             Section {
                 Picker("Provider", selection: $tempProvider) {
                     ForEach(providers, id: \.self) { provider in
@@ -73,6 +97,7 @@ struct SettingsView: View {
             Section {
                 SecureField("API Key", text: currentApiKey)
                     .textFieldStyle(.roundedBorder)
+                    .focusable(false)
             } header: {
                 
             }
@@ -95,6 +120,9 @@ struct SettingsView: View {
                     openaiKey = tempOpenAIKey
                     grokKey = tempGrokKey
                     showOnTop = tempShowOnTop
+                    useProxy = tempUseProxy
+                    proxyHost = tempProxyHost
+                    proxyPort = tempProxyPort
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -102,7 +130,7 @@ struct SettingsView: View {
             .padding(.top)
         }
         .padding()
-        .frame(width: 400, height: 200)
+        .frame(width: 400, height: 300)
     }
 }
 
