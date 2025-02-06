@@ -9,6 +9,8 @@
 
 MyEnhancer is a macOS application that helps you enhance and transform text using AI capabilities. It provides features like proofreading, shortening text, and translation between multiple languages.
 
+![logo](./MyEnhancer/Assets.xcassets/AppIcon.appiconset/r256.png)
+
 ## Screenshots
 
 ![Main](./screenshots/a1.png)
