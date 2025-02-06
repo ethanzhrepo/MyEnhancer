@@ -3,6 +3,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/ethanzhrepo/MyEnhancer)
 ![GitHub Release](https://img.shields.io/github/v/release/ethanzhrepo/MyEnhancer)
 ![GitHub Repo stars](https://img.shields.io/github/stars/ethanzhrepo/MyEnhancer)
+
 ![License](https://img.shields.io/github/license/ethanzhrepo/MyEnhancer)
 ![Twitter Follow](https://img.shields.io/twitter/follow/0x99_Ethan?style=social)
 
