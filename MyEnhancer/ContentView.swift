@@ -38,12 +38,25 @@ struct ContentView: View {
     @AppStorage("showOnTop") private var showOnTop: Bool = false
     
     let languages = ["English", "简体中文", "日本語", "한국어", "العربية", "Deutsch"]
-    let personalities = [
-        "1920s Gangster", "Caveman", "Cockney", "Emoji Madness", 
-        "Indian Guru", "Influencer", "News Anchor", "Old-Timey Prospector",
-        "Pirate", "Rapper", "Roast Comic", "Scientist", "Scotsman",
-        "Shakespearean", "Southern Belle", "Stand-up Comedian",
-        "Valley Girl", "Wrestler"
+    let personalities: [String: String] = [
+        "1920s Gangster": "1920s Gangster",
+        "Caveman": "Caveman",
+        "Cockney": "London Cockney Rhyming Slang",
+        "Emojis Madness": "Interleaving extra meaning with too many Emojis",
+        "Indian Guru": "Indian Guru",
+        "Influencer": "An Influencer. Energetic, punchy, teen TikToker. Trying to get more views.",
+        "News Anchor": "Click-bait News Anchor",
+        "Old-Timey Prospector": "Old-Timey Prospector",
+        "Pirate": "treasure obsessed Pirate captain",
+        "Rapper": "spiting clever wordplay rhymes like a best-selling rapper",
+        "Roast Comic": "hilarious but vulgar Roast Comic murdering a topic or people using only words",
+        "Scientist": "Scientist, precise, academic, with exaggerated emphasis on syllables, and technical terms",
+        "Scotsman": "very strong Scottish accent",
+        "Shakespearean": "Shakespearean",
+        "Southern Belle": "Southern Belle",
+        "Stand-up Comedian": "edgy Stand-up Comedian, pulls no punches",
+        "Valley Girl": "California Valley Girl",
+        "Wrestler": "Overconfident Wrestler from TV Wrestling Entertainment addressing the crowd and opponent"
     ]
     
     // 每次使用时实时读取配置
@@ -159,8 +172,8 @@ struct ContentView: View {
                         .frame(height: 20)
                     
                     Picker("", selection: $selectedPersonality) {
-                        ForEach(personalities, id: \.self) { personality in
-                            Text(personality).tag(personality)
+                        ForEach(Array(personalities.keys).sorted(), id: \.self) { key in
+                            Text(key).tag(key)
                         }
                     }
                     .frame(width: 100)
@@ -168,7 +181,9 @@ struct ContentView: View {
                     
                     Button("As Personality") {
                         Task {
-                            // TODO: 实现性格转换功能
+                            let personalityPrompt = Prompts.PERSONALITY
+                                .replacingOccurrences(of: "{TARGET_CHARACTER}", with: personalities[selectedPersonality] ?? "")
+                            await processAIRequest(withPrompt: personalityPrompt + inputText)
                         }
                     }
                     .disabled(isProcessing)
