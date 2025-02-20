@@ -32,11 +32,19 @@ struct ContentView: View {
     @State private var inputText: String = ""
     @State private var outputText: String = ""
     @State private var selectedLanguage: String = "English"
+    @State private var selectedPersonality: String = "1920s Gangster"
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @AppStorage("showOnTop") private var showOnTop: Bool = false
     
     let languages = ["English", "简体中文", "日本語", "한국어", "العربية", "Deutsch"]
+    let personalities = [
+        "1920s Gangster", "Caveman", "Cockney", "Emoji Madness", 
+        "Indian Guru", "Influencer", "News Anchor", "Old-Timey Prospector",
+        "Pirate", "Rapper", "Roast Comic", "Scientist", "Scotsman",
+        "Shakespearean", "Southern Belle", "Stand-up Comedian",
+        "Valley Girl", "Wrestler"
+    ]
     
     // 每次使用时实时读取配置
     private func getCurrentSettings() -> (provider: String, model: String, apiKey: String)? {
@@ -143,6 +151,24 @@ struct ContentView: View {
                     Button("Shorten") {
                         Task {
                             await processAIRequest(withPrompt: Prompts.SHORTEN + inputText)
+                        }
+                    }
+                    .disabled(isProcessing)
+                    
+                    Divider()
+                        .frame(height: 20)
+                    
+                    Picker("", selection: $selectedPersonality) {
+                        ForEach(personalities, id: \.self) { personality in
+                            Text(personality).tag(personality)
+                        }
+                    }
+                    .frame(width: 100)
+                    .disabled(isProcessing)
+                    
+                    Button("As Personality") {
+                        Task {
+                            // TODO: 实现性格转换功能
                         }
                     }
                     .disabled(isProcessing)

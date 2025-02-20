@@ -36,10 +36,10 @@ struct MyEnhancerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(width: 460)
+                .frame(width: 660)
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 460, height: 300)
+        .defaultSize(width: 660, height: 300)
         .windowResizability(.contentSize)  // 禁止调整窗口大小
         
         // 添加设置窗口
