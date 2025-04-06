@@ -13,7 +13,7 @@ MyEnhancer is a macOS application that helps you enhance and transform text usin
 
 ## Download
 
-![Download](https://github.com/ethanzhrepo/MyEnhancer/releases/download/v0.0.1-beta/MyEnhancer_v0.0.1-beta.dmg)
+[Download](https://github.com/ethanzhrepo/MyEnhancer/releases/download/v0.0.1-beta/MyEnhancer_v0.0.1-beta.dmg)
 
 ## Screenshots
 
