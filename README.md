@@ -11,6 +11,10 @@ MyEnhancer is a macOS application that helps you enhance and transform text usin
 
 ![logo](./MyEnhancer/Assets.xcassets/AppIcon.appiconset/r256.png)
 
+## Download
+
+![Download](https://github.com/ethanzhrepo/MyEnhancer/releases/download/v0.0.1-beta/MyEnhancer_v0.0.1-beta.dmg)
+
 ## Screenshots
 
 ![Main](./screenshots/a1.png)
