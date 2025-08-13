@@ -60,18 +60,33 @@ struct ContentView: View {
     ]
     
     // 每次使用时实时读取配置
-    private func getCurrentSettings() -> (provider: String, model: String, apiKey: String)? {
+    private func getCurrentSettings() -> (provider: String, model: String, apiKey: String, ollamaHost: String?, ollamaPort: String?)? {
         let defaults = UserDefaults.standard
         guard let provider = defaults.string(forKey: "selectedProvider"),
               let model = defaults.string(forKey: "selectedModel") else {
             return nil
         }
         
-        let apiKey = provider == "OpenAI" 
-            ? defaults.string(forKey: "openaiKey") ?? ""
-            : defaults.string(forKey: "grokKey") ?? ""
+        let apiKey: String
+        switch provider {
+        case "OpenAI":
+            apiKey = defaults.string(forKey: "openaiKey") ?? ""
+        case "X":
+            apiKey = defaults.string(forKey: "grokKey") ?? ""
+        case "DeepSeek":
+            apiKey = defaults.string(forKey: "deepseekKey") ?? ""
+        case "Gemini":
+            apiKey = defaults.string(forKey: "geminiKey") ?? ""
+        case "Ollama":
+            apiKey = ""
+        default:
+            apiKey = ""
+        }
+        
+        let ollamaHost = defaults.string(forKey: "ollamaHost")
+        let ollamaPort = defaults.string(forKey: "ollamaPort")
             
-        return (provider, model, apiKey)
+        return (provider, model, apiKey, ollamaHost, ollamaPort)
     }
     
     // 检查基本配置
@@ -79,7 +94,7 @@ struct ContentView: View {
         guard let settings = getCurrentSettings() else {
             throw AIError.noModelSelected
         }
-        guard !settings.apiKey.isEmpty else {
+        if settings.provider != "Ollama" && settings.apiKey.isEmpty {
             throw AIError.noApiKey
         }
         guard !inputText.isEmpty else {
@@ -99,12 +114,26 @@ struct ContentView: View {
             errorMessage = nil
             
             let result: String
-            if settings.provider == "OpenAI" {
+            switch settings.provider {
+            case "OpenAI":
                 let openAI = OpenAI(apiKey: settings.apiKey)
                 result = try await openAI.complete(model: settings.model, prompt: prompt)
-            } else {
+            case "X":
                 let grok = Grok(apiKey: settings.apiKey)
                 result = try await grok.complete(model: settings.model, prompt: prompt)
+            case "DeepSeek":
+                let deepseek = DeepSeek(apiKey: settings.apiKey)
+                result = try await deepseek.complete(model: settings.model, prompt: prompt)
+            case "Gemini":
+                let gemini = Gemini(apiKey: settings.apiKey)
+                result = try await gemini.complete(model: settings.model, prompt: prompt)
+            case "Ollama":
+                let host = settings.ollamaHost ?? "localhost"
+                let port = settings.ollamaPort ?? "11434"
+                let ollama = Ollama(host: host, port: port)
+                result = try await ollama.complete(model: settings.model, prompt: prompt)
+            default:
+                throw AIError.apiError("Unsupported provider: \(settings.provider)")
             }
             
             await MainActor.run {

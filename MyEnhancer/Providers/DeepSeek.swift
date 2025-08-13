@@ -1,8 +1,9 @@
 import Foundation
 
-class OpenAI {
+class DeepSeek {
     private let apiKey: String
-    private let baseURL = "https://api.openai.com/v1/chat/completions"
+    private let baseURL = "https://api.deepseek.com/v1/chat/completions"
+    private let modelsURL = "https://api.deepseek.com/v1/models"
     private let session: URLSession
     
     init(apiKey: String) {
@@ -11,13 +12,12 @@ class OpenAI {
     }
     
     func complete(model: String, prompt: String) async throws -> String {
-        // 调试输出
-        print("=== OpenAI API Debug ===")
+        print("=== DeepSeek API Debug ===")
         print("Model: \(model)")
         print("Input text: \(prompt)")
         print("API URL: \(baseURL)")
-        print("API Key: \(apiKey.prefix(8))...") // 只显示 API Key 的前 8 位
-        print("=====================")
+        print("API Key: \(apiKey.prefix(8))...")
+        print("========================")
         
         guard let url = URL(string: baseURL) else {
             throw URLError(.badURL)
@@ -26,7 +26,7 @@ class OpenAI {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))", forHTTPHeaderField: "Authorization")  // 确保移除空白字符
+        request.setValue("Bearer \(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))", forHTTPHeaderField: "Authorization")
         
         let body: [String: Any] = [
             "model": model,
@@ -36,7 +36,6 @@ class OpenAI {
             "temperature": 0.7
         ]
         
-        // 打印完整的请求头信息
         print("Request Headers:")
         request.allHTTPHeaderFields?.forEach { key, value in
             print("\(key): \(value)")
@@ -44,10 +43,8 @@ class OpenAI {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
-        // 使用配置了代理的 session
         let (data, httpResponse) = try await session.data(for: request)
         
-        // 记录响应状态码和原始数据
         if let httpResponse = httpResponse as? HTTPURLResponse {
             print("Response status code: \(httpResponse.statusCode)")
         }
@@ -56,13 +53,13 @@ class OpenAI {
             print("Response JSON: \(jsonString)")
         }
         
-        let apiResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
+        let apiResponse = try JSONDecoder().decode(DeepSeekResponse.self, from: data)
         
         return apiResponse.choices.first?.message.content ?? ""
     }
     
     func fetchAvailableModels() async throws -> [String] {
-        guard let url = URL(string: "https://api.openai.com/v1/models") else {
+        guard let url = URL(string: modelsURL) else {
             throw URLError(.badURL)
         }
         
@@ -71,17 +68,13 @@ class OpenAI {
         request.setValue("Bearer \(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))", forHTTPHeaderField: "Authorization")
         
         let (data, _) = try await session.data(for: request)
-        let modelsResponse = try JSONDecoder().decode(OpenAIModelsResponse.self, from: data)
+        let modelsResponse = try JSONDecoder().decode(DeepSeekModelsResponse.self, from: data)
         
-        return modelsResponse.data
-            .filter { $0.id.contains("gpt") || $0.id.contains("o1") || $0.id.contains("o3") }
-            .map { $0.id }
-            .sorted()
+        return modelsResponse.data.map { $0.id }.sorted()
     }
 }
 
-// Response models
-struct OpenAIResponse: Codable {
+struct DeepSeekResponse: Codable {
     let choices: [Choice]
     
     struct Choice: Codable {
@@ -93,7 +86,7 @@ struct OpenAIResponse: Codable {
     }
 }
 
-struct OpenAIModelsResponse: Codable {
+struct DeepSeekModelsResponse: Codable {
     let data: [Model]
     
     struct Model: Codable {
@@ -102,4 +95,4 @@ struct OpenAIModelsResponse: Codable {
         let created: Int?
         let owned_by: String?
     }
-} 
+}

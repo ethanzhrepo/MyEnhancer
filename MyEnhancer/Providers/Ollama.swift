@@ -1,42 +1,46 @@
 import Foundation
 
-class OpenAI {
+class Ollama {
     private let apiKey: String
-    private let baseURL = "https://api.openai.com/v1/chat/completions"
+    private let host: String
+    private let port: String
     private let session: URLSession
     
-    init(apiKey: String) {
+    init(apiKey: String = "", host: String = "localhost", port: String = "11434") {
         self.apiKey = apiKey
+        self.host = host
+        self.port = port
         self.session = NetworkConfig.configuredSession()
     }
     
+    private var baseURL: String {
+        return "http://\(host):\(port)"
+    }
+    
     func complete(model: String, prompt: String) async throws -> String {
-        // 调试输出
-        print("=== OpenAI API Debug ===")
+        print("=== Ollama API Debug ===")
         print("Model: \(model)")
         print("Input text: \(prompt)")
-        print("API URL: \(baseURL)")
-        print("API Key: \(apiKey.prefix(8))...") // 只显示 API Key 的前 8 位
-        print("=====================")
+        print("API URL: \(baseURL)/api/chat")
+        print("Host: \(host):\(port)")
+        print("=======================")
         
-        guard let url = URL(string: baseURL) else {
+        guard let url = URL(string: "\(baseURL)/api/chat") else {
             throw URLError(.badURL)
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))", forHTTPHeaderField: "Authorization")  // 确保移除空白字符
         
         let body: [String: Any] = [
             "model": model,
             "messages": [
                 ["role": "user", "content": prompt]
             ],
-            "temperature": 0.7
+            "stream": false
         ]
         
-        // 打印完整的请求头信息
         print("Request Headers:")
         request.allHTTPHeaderFields?.forEach { key, value in
             print("\(key): \(value)")
@@ -44,10 +48,8 @@ class OpenAI {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
-        // 使用配置了代理的 session
         let (data, httpResponse) = try await session.data(for: request)
         
-        // 记录响应状态码和原始数据
         if let httpResponse = httpResponse as? HTTPURLResponse {
             print("Response status code: \(httpResponse.statusCode)")
         }
@@ -56,50 +58,60 @@ class OpenAI {
             print("Response JSON: \(jsonString)")
         }
         
-        let apiResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
+        let apiResponse = try JSONDecoder().decode(OllamaResponse.self, from: data)
         
-        return apiResponse.choices.first?.message.content ?? ""
+        return apiResponse.message.content
     }
     
     func fetchAvailableModels() async throws -> [String] {
-        guard let url = URL(string: "https://api.openai.com/v1/models") else {
+        guard let url = URL(string: "\(baseURL)/api/tags") else {
             throw URLError(.badURL)
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))", forHTTPHeaderField: "Authorization")
         
         let (data, _) = try await session.data(for: request)
-        let modelsResponse = try JSONDecoder().decode(OpenAIModelsResponse.self, from: data)
+        let modelsResponse = try JSONDecoder().decode(OllamaModelsResponse.self, from: data)
         
-        return modelsResponse.data
-            .filter { $0.id.contains("gpt") || $0.id.contains("o1") || $0.id.contains("o3") }
-            .map { $0.id }
-            .sorted()
+        return modelsResponse.models.map { $0.name }.sorted()
     }
 }
 
-// Response models
-struct OpenAIResponse: Codable {
-    let choices: [Choice]
-    
-    struct Choice: Codable {
-        let message: Message
-    }
+struct OllamaResponse: Codable {
+    let message: Message
+    let done: Bool
+    let total_duration: Int?
+    let load_duration: Int?
+    let prompt_eval_count: Int?
+    let prompt_eval_duration: Int?
+    let eval_count: Int?
+    let eval_duration: Int?
     
     struct Message: Codable {
+        let role: String
         let content: String
     }
 }
 
-struct OpenAIModelsResponse: Codable {
-    let data: [Model]
+struct OllamaModelsResponse: Codable {
+    let models: [Model]
     
     struct Model: Codable {
-        let id: String
-        let object: String
-        let created: Int?
-        let owned_by: String?
+        let name: String
+        let model: String?
+        let modified_at: String?
+        let size: Int?
+        let digest: String?
+        let details: Details?
+        
+        struct Details: Codable {
+            let parent_model: String?
+            let format: String?
+            let family: String?
+            let families: [String]?
+            let parameter_size: String?
+            let quantization_level: String?
+        }
     }
-} 
+}
